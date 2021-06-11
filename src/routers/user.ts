@@ -18,61 +18,61 @@ export function createUserRouter(userService: IUserService): Router {
 
   return router
     .get<{ id: string }>(
-      '/user/:id',
-      async (request, response) => {
+      '/:id',
+      async (request, response, next) => {
         const id = request.params.id;
 
         try {
           const user = await userService.getById(id);
 
           if (!user) {
-            response.status(404).send('Not found!');
+            return response.status(404).send('Not found!');
           }
 
-          response.json(user);
+          return response.json(user);
         } catch (error) {
-          response.status(500).send(error?.message);
+          return next(error);
         }
       })
     .post(
-      '/user',
+      '/',
       validator.body(UserValidationSchema),
-      async (request, response) => {
+      async (request, response, next) => {
         const user = request.body;
 
         try {
           const updatedOrNewUser = await userService.createOrUpdate(user);
 
-          response.json(updatedOrNewUser);
+          return response.json(updatedOrNewUser);
         } catch (error) {
-          response.status(500).send(error?.message);
+          return next(error);
         }
       }
     )
     .get<{ search: string, limit: string }>(
       '/user-suggest',
-      async (request, response) => {
+      async (request, response, next) => {
         const { search: searchString, limit } = request.query;
 
         try {
           const foundUsers = await userService.search(searchString, limit);
 
-          response.json(foundUsers);
+          return response.json(foundUsers);
         } catch (error) {
-          response.status(500).send(error?.message);
+          return next(error);
         }
       }
     )
     .delete<{ id: string }>(
-      '/user/:id',
-      async (request, response) => {
+      '/:id',
+      async (request, response, next) => {
         const id = request.params.id;
 
         try {
           await userService.removeSoftly(id);
-          response.send('User removed!');
+          return response.send('User removed!');
         } catch (error) {
-          response.status(500).send(error?.message);
+          return next(error);
         }
       }
     );
