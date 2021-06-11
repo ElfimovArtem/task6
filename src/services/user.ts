@@ -6,6 +6,7 @@ export interface IUserService {
   createOrUpdate(user: User): Promise<User | null>;
   removeSoftly(id: string): Promise<boolean>;
   search(login: string, limit: number): Promise<User[]>;
+  checkUserCredentials(login: string, password: string): Promise<User | null>;
 }
 
 export class UserService implements IUserService {
@@ -46,5 +47,16 @@ export class UserService implements IUserService {
     }
 
     return [];
+  }
+
+  async checkUserCredentials(login: string, password: string): Promise<User | null> {
+    const users = await this.search(login, 1);
+    const user = users?.[0];
+
+    if (!user || user.password !== password) {
+      return null;
+    }
+
+    return user;
   }
 }
