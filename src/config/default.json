@@ -1,4 +1,0 @@
-{
-  "databaseConnectionString": "postgres://localhost:5432/node-js-epam-mentoring",
-  "authSecret": "qwerty12345678991123sd"
-}

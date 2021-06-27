@@ -1,12 +1,24 @@
 import { Sequelize } from 'sequelize';
 import { initUserModel, associateUserModel } from './models/user';
 import { initGroupModel, associateGroupModel } from './models/group';
-import { initUsersGroupsModel } from './models/usersGroups';
+import { initUsersGroupsModel } from './models/userGroups';
 
 export let sequelize: Sequelize;
 
-export function initializeDB(connectionString: string) {
-  const sequelize = new Sequelize(connectionString);
+export function initializeDB() {
+  if (sequelize) {
+    return;
+  }
+
+  sequelize = new Sequelize(
+    'node-js-epam-mentoring',
+    'postgres',
+    'YofGawciHetbit9',
+    {
+      host: 'localhost',
+      dialect: 'postgres'
+    }
+  );
 
   initGroupModel(sequelize);
   initUserModel(sequelize);
@@ -16,8 +28,8 @@ export function initializeDB(connectionString: string) {
   associateGroupModel();
 
   sequelize.authenticate()
-    .then(() => console.log('DB success connection'))
-    .catch((error: Error) => console.log(`DBrror in connection ${error?.message}`));
+    .then(() => console.log('Success connection'))
+    .catch((error: Error) => console.log(`Error in connection ${error?.message}`));
 
   return {
     closeConnection: sequelize.close.bind(sequelize)
