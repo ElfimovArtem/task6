@@ -1,5 +1,6 @@
 import express from 'express';
 import expressWinston from 'express-winston';
+import config from 'config';
 import { logger } from './utils/logger';
 import cors from 'cors';
 import { initializeDB } from './db-init';
@@ -11,8 +12,12 @@ import { AccessorToUserData } from './data-access/user';
 import { createGroupRouter } from './routers/group';
 import { GroupService } from './services/group';
 import { AccessorToGroupData } from './data-access/group';
+
 import errorHandlingMiddleware from './middlewares/error-handling-middleware';
-import { authValidatorMiddleware, authenticationMiddleware, checkAuth } from './middlewares/auth-middleware';
+import { authValidatorMiddleware, createAuthMiddlewares } from './middlewares/auth-middleware';
+
+const dbConnectionString = config.get<string>('dbConnectionString');
+const authSecret = config.get<string>('authSecret');
 
 const app = express();
 
@@ -21,13 +26,16 @@ app.use(
   cors()
 );
 
-const db = initializeDB();
+const db = initializeDB(dbConnectionString);
 
 const accessorToUserData = new AccessorToUserData();
 const userService = new UserService(accessorToUserData);
 
 const accessorToGroupData = new AccessorToGroupData();
 const groupService = new GroupService(accessorToGroupData);
+
+const auth = createAuthMiddlewares(userService, { secret: authSecret });
+
 
 app.use(
   '/',
@@ -37,18 +45,18 @@ app.use(
 app.use(
   '/login',
   authValidatorMiddleware,
-  authenticationMiddleware(userService)
+  auth.loginMiddleware
 );
 
 app.use(
   '/user',
-  checkAuth,
+  auth.tokenCheckMiddleware,
   createUserRouter(userService),
 );
 
 app.use(
   '/group',
-  checkAuth,
+  auth.tokenCheckMiddleware,
   createGroupRouter(groupService)
 );
 
